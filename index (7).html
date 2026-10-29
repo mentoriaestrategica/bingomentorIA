@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bingo de Conteúdo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalnia:wght@600;700&family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: cartaz preto no topo, cartela da aluna no centro, placar da turma abaixo. Identidade fixa da mentoria (lavanda, preto, branco) nos dois temas. */
+:root {
+  --lav: #e8d9fe;
+  --lav-deep: #cdb6f5;
+  --ink: #0b0b0c;
+  --paper: #ffffff;
+  --muted: #5d5568;
+  --line: #d9cfe8;
+  --display: "Kalnia", "Playfair Display", Georgia, serif;
+  --serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.45; }
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* topo */
+.top { background: var(--ink); color: var(--paper); }
+.top .wrap { padding-block: 28px 30px; display: grid; gap: 18px; }
+.eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--lav); }
+.toprow { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; justify-content: space-between; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(40px, 9vw, 76px); line-height: .95; margin: 6px 0 0; letter-spacing: -.01em; }
+h1 span { color: var(--lav); }
+.lede { font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--lav); max-width: 46ch; margin: 0; text-wrap: balance; }
+.counts { display: flex; gap: 10px; flex-wrap: wrap; }
+.count { background: var(--lav); color: var(--ink); border-radius: 14px; padding: 10px 14px; min-width: 112px; }
+.count b { display: block; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+.count small { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.count.dark { background: transparent; color: var(--paper); border: 1.5px solid var(--lav); }
+
+/* prêmios */
+.prizes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.prize { border: 1.5px solid #3a3440; border-radius: 14px; padding: 12px 14px; display: grid; gap: 2px; }
+.prize .t { font-family: var(--serif); font-weight: 700; font-size: 18px; }
+.prize .d { font-size: 13px; color: #cfc6dc; }
+.prize .w { font-size: 13px; font-weight: 600; color: var(--lav); margin-top: 4px; }
+
+/* seções */
+section { padding-block: 26px 6px; }
+h2 { font-family: var(--serif); font-weight: 700; font-size: 26px; margin: 0 0 4px; text-wrap: balance; }
+.sub { color: var(--muted); margin: 0 0 14px; font-size: 14px; }
+
+/* quem é você */
+.who { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.who button { font: 600 14px var(--sans); border: 1.5px solid var(--ink); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 9px 16px; cursor: pointer; }
+.who button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.who button:focus-visible, .cell:focus-visible, .btn:focus-visible { outline: 3px solid var(--lav-deep); outline-offset: 2px; }
+
+/* cartela */
+.cardhead { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+.cardhead .name { font-family: var(--serif); font-size: 22px; font-weight: 700; }
+.progress { font-size: 13px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+#cardArea { max-width: 640px; }
+.letters, .grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.letters div { background: var(--ink); color: var(--lav); text-align: center; font-family: var(--display); font-weight: 700; font-size: 22px; border-radius: 10px; padding: 4px 0; }
+.grid { margin-top: 6px; }
+.cell { position: relative; aspect-ratio: 1 / 1; min-width: 0; border: 1.5px solid var(--ink); border-radius: 12px; background: var(--paper); color: var(--ink); padding: 8px 6px 18px; font: 600 12.5px/1.25 var(--sans); text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: background .15s, transform .1s; }
+.cell:active { transform: scale(.97); }
+.cell .tx { overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; }
+.cell .stamp { position: absolute; left: 0; right: 0; bottom: 5px; font-size: 10px; font-weight: 700; letter-spacing: .04em; color: var(--muted); }
+.cell.on { background: var(--lav); border-color: var(--lav-deep); }
+.cell.on::after { content: ""; position: absolute; top: 6px; right: 6px; width: 16px; height: 16px; border-radius: 50%; background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.3l2.6 2.5L12 5.4' fill='none' stroke='%23e8d9fe' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat; }
+.cell.on .stamp { color: var(--ink); }
+.cell.free { background: var(--ink); color: var(--lav); border-color: var(--ink); cursor: default; font-family: var(--serif); font-size: 14px; }
+.cell.inline { box-shadow: inset 0 0 0 3px var(--ink); }
+@media (max-width: 520px) { .cell { aspect-ratio: 3 / 4; font-size: 10px; padding: 6px 2px 15px; border-radius: 9px; } .cell .stamp { font-size: 8.5px; bottom: 3px; } .letters div { font-size: 18px; } .cell.on::after { width: 12px; height: 12px; background-size: 9px; top: 4px; right: 4px; } }
+.hint { font-size: 13px; color: var(--muted); margin-top: 10px; }
+.confirm { border: 1.5px solid var(--ink); border-radius: 14px; padding: 14px; display: grid; gap: 10px; width: 100%; }
+.confirm p { margin: 0; }
+.confirm .row { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn.ghost { background: var(--paper); color: var(--ink); border: 1.5px solid var(--ink); }
+.empty-pick { border: 1.5px dashed var(--line); border-radius: 14px; padding: 22px; text-align: center; color: var(--muted); }
+
+/* placar */
+.board { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.team { border: 1.5px solid var(--ink); border-radius: 14px; padding: 12px; display: grid; gap: 10px; }
+.team.me { background: var(--lav); border-color: var(--lav-deep); }
+.team .tn { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.team .tn b { font-family: var(--serif); font-size: 18px; }
+.team .tn span { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mini { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+.mini i { aspect-ratio: 1; border-radius: 4px; border: 1px solid var(--ink); background: var(--paper); }
+.mini i.on { background: var(--ink); }
+.bar { height: 6px; border-radius: 99px; background: var(--paper); border: 1px solid var(--ink); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--ink); }
+.badges { display: flex; gap: 6px; flex-wrap: wrap; min-height: 22px; }
+.badge { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--ink); color: var(--lav); }
+.badge.soft { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+
+/* regras */
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.rule { background: var(--lav); border-radius: 14px; padding: 14px; }
+.rule b { display: block; font-family: var(--serif); font-size: 16px; margin-bottom: 3px; }
+.rule p { margin: 0; font-size: 13.5px; }
+
+.status { font-size: 12.5px; color: var(--muted); padding-block: 26px 34px; border-top: 1px solid var(--line); margin-top: 28px; }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; display: flex; gap: 12px; align-items: center; z-index: 20; max-width: calc(100% - 32px); }
+.toast button { font: 700 13px var(--sans); background: var(--lav); color: var(--ink); border: 0; border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+.celebrate { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(11,11,12,.72); z-index: 30; padding: 16px; }
+.celebrate .box { background: var(--lav); color: var(--ink); border-radius: 20px; padding: 28px 24px; text-align: center; max-width: 380px; }
+.celebrate .box b { display: block; font-family: var(--display); font-size: 54px; line-height: 1; }
+.celebrate .box p { margin: 10px 0 16px; }
+.btn { font: 700 14px var(--sans); background: var(--ink); color: var(--paper); border: 0; border-radius: 999px; padding: 10px 18px; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .cell { transition: none; } .cell:active { transform: none; } }
+</style>
+</head>
+<body>
+
+
+<header class="top">
+  <div class="wrap">
+    <div class="eyebrow">Mentoria Estratégica · Desafio da turma</div>
+    <div class="toprow">
+      <div>
+        <h1>Bingo de<br><span>Conteúdo</span></h1>
+      </div>
+      <div class="counts" aria-label="Contagem regressiva">
+        <div class="count"><b id="d1111">–</b><small>dias p/ 11.11</small></div>
+        <div class="count dark"><b id="dbf">–</b><small>dias p/ Black</small></div>
+      </div>
+    </div>
+    <p class="lede">Fez, marcou. Sem ordem, sem dia certo: cada story, Reels ou mensagem que tu fizer até a Black vira uma casa marcada.</p>
+    <div class="prizes">
+      <div class="prize"><span class="eyebrow">Prêmio 1 · até 11/11</span><span class="t">Primeira linha</span><span class="d">Quem completar primeiro uma linha, coluna ou diagonal.</span><span class="w" id="w1">Ainda ninguém. Pode ser tu!</span></div>
+      <div class="prize"><span class="eyebrow">Prêmio 2 · até 27/11</span><span class="t">Cartela cheia</span><span class="d">Quem marcar as 25 casas primeiro, até a Black Friday.</span><span class="w" id="w2">Ainda ninguém.</span></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" lang="pt-BR">
+  <section aria-labelledby="h-card">
+    <h2 id="h-card">Tua cartela</h2>
+    <p class="sub" id="cardSub">Carregando a tua cartela…</p>
+    <div class="who" id="who" role="group" aria-label="Escolher marca"></div>
+    <div id="cardArea"></div>
+  </section>
+
+  <section aria-labelledby="h-board">
+    <h2 id="h-board">Placar da turma</h2>
+    <p class="sub">Aqui aparece só o quanto cada marca já fez: a casa preta é tarefa feita. O que é cada tarefa fica só na cartela da dona.</p>
+    <div class="board" id="board"></div>
+  </section>
+
+  <section aria-labelledby="h-rules">
+    <h2 id="h-rules">Como funciona</h2>
+    <div class="rules">
+      <div class="rule"><b>Qualquer ordem</b><p>Não tem dia certo. Fez hoje, marca hoje. Cada marca tem a sua cartela, com as tarefas em lugares diferentes, e só a dona marca a dela.</p></div>
+      <div class="rule"><b>Vale o que foi feito</b><p>Só marca o que já está no ar ou já foi enviado. Na dúvida, manda o print no grupo.</p></div>
+      <div class="rule"><b>Postou, não apaga</b><p>O que entrar na cartela fica publicado por 30 dias. Feito é melhor que perfeito.</p></div>
+      <div class="rule"><b>Sem grupo VIP?</b><p>Troca por mensagem para 5 clientes antigas ou por uma lista de transmissão. Vale igual.</p></div>
+    </div>
+  </section>
+
+  <p class="status" id="status">Conectando o placar…</p>
+</main>
+
+<div class="toast" id="toast" hidden><span id="toastMsg"></span><button id="toastUndo" type="button">Desfazer</button></div>
+<div class="celebrate" id="party" hidden role="dialog" aria-modal="true" aria-labelledby="partyT"><div class="box"><b id="partyT">BINGO!</b><p id="partyMsg"></p><button class="btn" id="partyOk" type="button">Bora pra próxima</button></div></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function () {
+  "use strict";
+  const MARCAS = [
+    { id: "iza", nome: "Iza" },
+    { id: "suspira", nome: "Suspira" },
+    { id: "amormaria", nome: "Amor Maria" },
+    { id: "yara", nome: "Yara" },
+  ];
+  const TAREFAS = [
+    { id: "t01", tx: "Stories mostrando um produto" },
+    { id: "t02", tx: "Postar 1 Reels" },
+    { id: "t03", tx: "Mensagem no grupo VIP" },
+    { id: "t04", tx: "Stories de bastidor" },
+    { id: "t05", tx: "Postar depoimento de cliente" },
+    { id: "t06", tx: "Enquete nos stories" },
+    { id: "t07", tx: "Aparecer nos stories (rosto ou voz)" },
+    { id: "t08", tx: "Montar 1 kit ou combo" },
+    { id: "t09", tx: "Foto de produto com preço na legenda" },
+    { id: "t10", tx: "Caixinha de perguntas" },
+    { id: "t11", tx: "Contagem regressiva do 11.11" },
+    { id: "t12", tx: "Chamar de volta uma cliente que sumiu" },
+    { id: "t13", tx: "Stories com 3 dicas" },
+    { id: "t14", tx: "Mostrar o mais vendido" },
+    { id: "t15", tx: "Vídeo de 1 minuto falando" },
+    { id: "t16", tx: "Carrossel no feed" },
+    { id: "t17", tx: "Anunciar a oferta da Black" },
+    { id: "t18", tx: "Repostar cliente usando" },
+    { id: "t19", tx: "Reels com áudio em alta" },
+    { id: "t20", tx: "Comentar em 5 perfis da tua cidade" },
+    { id: "t21", tx: "Bio com a oferta do mês" },
+    { id: "t22", tx: "Produto em uso nos stories" },
+    { id: "t23", tx: "Responder todas as DMs do dia" },
+    { id: "t24", tx: "Contar 1 vitória no grupo da mentoria" },
+  ];
+  const FREE = 12;
+  const LINES = [];
+  for (let r = 0; r < 5; r++) LINES.push([0, 1, 2, 3, 4].map(c => r * 5 + c));
+  for (let c = 0; c < 5; c++) LINES.push([0, 1, 2, 3, 4].map(r => r * 5 + c));
+  LINES.push([0, 6, 12, 18, 24], [4, 8, 12, 16, 20]);
+
+  // ordem própria e fixa para cada marca
+  function seedOf(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function rng(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function layoutFor(marcaId) {
+    const r = rng(seedOf("bingo-" + marcaId)); const arr = TAREFAS.slice();
+    for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+    arr.splice(FREE, 0, null); return arr; // 25 casas, centro livre
+  }
+  const LAYOUT = Object.fromEntries(MARCAS.map(m => [m.id, layoutFor(m.id)]));
+
+  // ===== CONFIGURAÇÃO DO FIREBASE: cola aqui os dados do teu projeto =====
+  const FIREBASE_CONFIG = {
+    apiKey: "COLE_AQUI",
+    authDomain: "COLE_AQUI.firebaseapp.com",
+    projectId: "COLE_AQUI",
+  };
+  // impressões digitais dos códigos pessoais (o código em si só aparece no link de cada uma)
+  const CHAVES = {
+    "b87b80487516ae30e1fbc3564e8396f56bbe5e049843e2190055bdcb2555a24f": "iza",
+    "f4159c70d3029a4945eb9b652cf7f35ded27ad9f493b0337b7a2c85a7f6ab10e": "suspira",
+    "209896b48fee3a239410e7cffe71c13bf07c6f97b9f3aa1d9d2b83031959d7f2": "amormaria",
+    "579225eeea5fcb49b314d8e28771d16b45d4ce9e7a83400a990cd71747e5848a": "yara",
+    "4636021add4bb4cfd14619e93241b343bd2a2b77bd7077a24208434259ccadd4": "mentoria",
+  };
+
+  // estado — documentos: cartelas/<marca> = { marks: {tarefa: data}, updatedAt }
+  const state = { me: null, owner: false, view: null, docs: {}, col: null, mode: "boot", canWrite: true };
+  const $ = id => document.getElementById(id);
+
+  function daysTo(y, m, d) { const now = new Date(); const t = new Date(y, m - 1, d); const a = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return Math.max(0, Math.round((t - a) / 86400000)); }
+  $("d1111").textContent = daysTo(2026, 11, 11); $("dbf").textContent = daysTo(2026, 11, 27);
+
+  const marksOf = m => (state.docs[m] && state.docs[m].marks) || {};
+  function isOn(M, marcaId, idx) { return idx === FREE || !!M[LAYOUT[marcaId][idx].id]; }
+  function tsOf(M, marcaId, idx) { return idx === FREE ? 0 : (M[LAYOUT[marcaId][idx].id] || 0); }
+  function stats(marcaId) {
+    const M = marksOf(marcaId); const done = Object.keys(M).length;
+    let lines = 0, firstLine = Infinity; const inLine = new Set();
+    for (const L of LINES) { if (L.every(i => isOn(M, marcaId, i))) { lines++; L.forEach(i => inLine.add(i)); firstLine = Math.min(firstLine, Math.max(...L.map(i => tsOf(M, marcaId, i)))); } }
+    const full = done === TAREFAS.length ? Math.max(...Object.values(M)) : Infinity;
+    return { M, done, lines, firstLine, full, inLine };
+  }
+  function winner(key) { let best = null; for (const m of MARCAS) { const s = stats(m.id); if (s[key] < Infinity && (!best || s[key] < best.t)) best = { m, t: s[key] }; } return best; }
+  function fmt(ts) { return new Date(ts).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }); }
+  const nomeDe = id => (MARCAS.find(m => m.id === id) || {}).nome || "";
+
+  function renderWho() {
+    const w = $("who"), sub = $("cardSub"); w.textContent = "";
+    if (state.mode === "boot") { sub.textContent = "Carregando a tua cartela…"; return; }
+    if (state.owner) {
+      sub.textContent = "Modo da mentoria: toca numa marca para abrir a cartela dela. As alunas só veem e marcam a própria.";
+      for (const m of MARCAS) { const b = document.createElement("button"); b.type = "button"; b.textContent = m.nome; b.setAttribute("aria-pressed", String(state.view === m.id)); b.addEventListener("click", () => { state.view = m.id; render(); }); w.appendChild(b); }
+      return;
+    }
+    sub.textContent = state.me ? "Fez a tarefa? Toca na casa para marcar." : "";
+  }
+  function renderCard() {
+    const area = $("cardArea"); area.textContent = "";
+    const marcaId = state.owner ? state.view : state.me;
+    if (state.mode === "boot") return;
+    if (!marcaId) {
+      const e = document.createElement("div"); e.className = "empty-pick";
+      e.textContent = state.owner ? "Escolhe uma marca acima para abrir a cartela." : "Para ver e marcar a tua cartela, abre o link pessoal que a Dessa te mandou. Aqui embaixo dá para acompanhar o placar da turma.";
+      area.appendChild(e); return;
+    }
+    const editable = state.canWrite && state.mode === "live";
+    const s = stats(marcaId);
+    const head = document.createElement("div"); head.className = "cardhead";
+    const n = document.createElement("span"); n.className = "name"; n.textContent = "Cartela " + nomeDe(marcaId);
+    const p = document.createElement("span"); p.className = "progress"; p.textContent = s.done + " de 24 tarefas · " + s.lines + (s.lines === 1 ? " linha" : " linhas");
+    head.append(n, p); area.appendChild(head);
+    const letters = document.createElement("div"); letters.className = "letters"; letters.setAttribute("aria-hidden", "true");
+    for (const L of "BINGO") { const d = document.createElement("div"); d.textContent = L; letters.appendChild(d); }
+    area.appendChild(letters);
+    const g = document.createElement("div"); g.className = "grid";
+    LAYOUT[marcaId].forEach((t, idx) => {
+      const c = document.createElement("button"); c.type = "button"; c.className = "cell"; c.id = "cell-" + idx;
+      if (idx === FREE) { c.classList.add("free"); c.disabled = true; c.innerHTML = "<span class='tx'>Entrei no desafio</span>"; }
+      else {
+        const on = !!s.M[t.id];
+        c.classList.toggle("on", on); if (on && s.inLine.has(idx)) c.classList.add("inline");
+        c.setAttribute("aria-pressed", String(on));
+        const tx = document.createElement("span"); tx.className = "tx"; tx.textContent = t.tx; c.appendChild(tx);
+        if (on) { const st = document.createElement("span"); st.className = "stamp"; st.textContent = "feito " + fmt(s.M[t.id]); c.appendChild(st); }
+        if (editable) c.addEventListener("click", () => toggle(marcaId, t)); else c.disabled = true;
+      }
+      g.appendChild(c);
+    });
+    area.appendChild(g);
+    const h = document.createElement("p"); h.className = "hint";
+    h.textContent = state.owner ? "Modo da mentoria: o que tu marcar aqui conta para esta marca (útil para corrigir ou marcar quando uma aluna mandar print)."
+      : state.mode !== "live" ? "O placar está desconectado agora; as casas voltam a funcionar quando a conexão voltar."
+      : "Marcou sem querer? Toca de novo para desmarcar.";
+    area.appendChild(h);
+  }
+  function renderBoard() {
+    const b = $("board"); b.textContent = "";
+    const order = MARCAS.slice().sort((a, z) => stats(z.id).done - stats(a.id).done);
+    for (const m of order) {
+      const s = stats(m.id);
+      const box = document.createElement("div"); box.className = "team" + (m.id === state.me ? " me" : "");
+      const tn = document.createElement("div"); tn.className = "tn";
+      const nb = document.createElement("b"); nb.textContent = m.nome; const ns = document.createElement("span"); ns.textContent = s.done + "/24";
+      tn.append(nb, ns);
+      const mini = document.createElement("div"); mini.className = "mini"; mini.setAttribute("aria-hidden", "true");
+      for (let i = 0; i < 25; i++) { const x = document.createElement("i"); if (isOn(s.M, m.id, i)) x.className = "on"; mini.appendChild(x); }
+      const bar = document.createElement("div"); bar.className = "bar"; const bi = document.createElement("i"); bi.style.width = (s.done / 24 * 100) + "%"; bar.appendChild(bi);
+      const bd = document.createElement("div"); bd.className = "badges";
+      if (s.full < Infinity) bd.appendChild(badge("Cartela cheia"));
+      else if (s.lines) bd.appendChild(badge(s.lines === 1 ? "Bingo · 1 linha" : "Bingo · " + s.lines + " linhas"));
+      else if (s.done) bd.appendChild(badge("Em jogo", true));
+      else bd.appendChild(badge("Ainda não começou", true));
+      box.append(tn, mini, bar, bd); b.appendChild(box);
+    }
+    const w1 = winner("firstLine"), w2 = winner("full");
+    $("w1").textContent = w1 ? "Primeira linha: " + w1.m.nome + " (" + fmt(w1.t) + ")" : "Ainda ninguém. Pode ser tu!";
+    $("w2").textContent = w2 ? "Cartela cheia: " + w2.m.nome + " (" + fmt(w2.t) + ")" : "Ainda ninguém.";
+  }
+  function badge(t, soft) { const s = document.createElement("span"); s.className = "badge" + (soft ? " soft" : ""); s.textContent = t; return s; }
+  function render() { renderWho(); renderCard(); renderBoard(); }
+
+  let lastUndo = null, toastTimer = null;
+  function showToast(msg, undo) {
+    $("toastMsg").textContent = msg; lastUndo = undo || null; $("toastUndo").hidden = !undo; $("toast").hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { $("toast").hidden = true; lastUndo = null; }, 4500);
+  }
+  $("toastUndo").addEventListener("click", () => { if (lastUndo) lastUndo(); $("toast").hidden = true; });
+  $("partyOk").addEventListener("click", () => { $("party").hidden = true; });
+  function celebrate(msg) { $("partyMsg").textContent = msg; $("party").hidden = false; $("partyOk").focus(); }
+
+  function toggle(marcaId, t) {
+    const before = stats(marcaId);
+    const mine = Object.assign({}, before.M);
+    const prev = mine[t.id] || 0;
+    if (prev) delete mine[t.id]; else mine[t.id] = Date.now();
+    save(marcaId, mine);
+    const after = stats(marcaId);
+    if (!prev && after.full < Infinity) celebrate("Cartela cheia! As 24 tarefas estão feitas. Manda o print no grupo.");
+    else if (!prev && after.lines > before.lines) celebrate("Fechou uma linha! Manda o print no grupo da mentoria.");
+    else {
+      const undo = Object.assign({}, mine); if (prev) undo[t.id] = prev; else delete undo[t.id];
+      showToast(prev ? "Casa desmarcada" : "Marcado: " + t.tx, () => save(marcaId, undo));
+    }
+  }
+
+  // gravação: uma escrita por vez por cartela
+  const queued = {}, busy = {};
+  function save(marcaId, marks) {
+    state.docs[marcaId] = { marks: marks }; render();
+    queued[marcaId] = { marks: marks, updatedAt: Date.now() }; flush(marcaId);
+  }
+  async function flush(id) {
+    if (busy[id] || !queued[id]) return;
+    busy[id] = true; const body = queued[id]; queued[id] = null;
+    try { await state.col.doc(id).set(body); }
+    catch (e) { setStatus("Não deu para salvar agora. Confere a internet e tenta marcar de novo."); }
+    busy[id] = false; if (queued[id]) flush(id);
+  }
+  function setStatus(t) { $("status").textContent = t; }
+
+  async function sha256(txt) {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  render();
+  (async function boot() {
+    // quem é: código do link (?c=...) guardado no aparelho para as próximas visitas
+    let code = new URLSearchParams(location.search).get("c");
+    try { if (code) localStorage.setItem("bingo-code", code); else code = localStorage.getItem("bingo-code"); } catch (e) {}
+    if (code) { try { const who = CHAVES[await sha256(code.trim().toLowerCase())]; if (who === "mentoria") state.owner = true; else if (who) state.me = who; } catch (e) {} }
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      state.col = firebase.firestore().collection("cartelas");
+    } catch (e) { state.mode = "off"; render(); setStatus("O placar ainda não está configurado (falta colar os dados do Firebase no arquivo)."); return; }
+    state.mode = "live"; render();
+    state.col.onSnapshot(snap => {
+      const docs = {};
+      snap.forEach(d => { if (MARCAS.some(m => m.id === d.id)) docs[d.id] = { marks: (d.data() || {}).marks || {} }; });
+      for (const id of Object.keys(busy)) if ((busy[id] || queued[id]) && state.docs[id]) docs[id] = state.docs[id];
+      state.docs = docs; state.mode = "live"; render();
+      setStatus(state.owner ? "Placar ao vivo · tu estás no modo da mentoria." : "Placar ao vivo: o que cada uma marca aparece aqui para todas.");
+    }, () => { state.mode = "off"; render(); setStatus("O placar parou de atualizar. Recarrega a página para reconectar."); });
+  })();
+})();
+</script>
+
+</body>
+</html>
